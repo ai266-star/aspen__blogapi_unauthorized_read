@@ -1,0 +1,40 @@
+schema_version = "1.1"
+
+[task]
+name = "aspen/Author-tests-for-unauthorized-read-in-blog-API"
+description = "Author tests for IDOR vulnerability in blog API"
+authors = []
+keywords = []
+
+[metadata]
+source = "hand-authored"
+environment_id = "aspen"
+instance_id = "aspen__blogapi_unauthorized_read_001"
+pipeline = "aspen"
+task_type = "test_authoring"
+rubric_only = true
+image_digest = "sha256:e8c9fb40d9d9deddde7e41a8b33be0c9f6f98cdfc7df092cf563239bf9c79b3f"
+base_commit = "ca2558356c8a3499365f5be4a47fc0ad5b43cbf7"
+
+[verifier]
+timeout_sec = 1800.0
+
+[verifier.env]
+ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY:-}"
+OPENAI_API_KEY = "${OPENAI_API_KEY:-}"
+
+[agent]
+timeout_sec = 3600.0
+
+[environment]
+build_timeout_sec = 3600.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+allow_internet = true
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]

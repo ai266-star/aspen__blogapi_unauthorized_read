@@ -1,0 +1,7 @@
+Hey! We've got an issue with the blog API. One of the permission boundaries is off, and the current behavior lets a normal user get farther than they should. We know there is an authorization inconsistency somewhere in the request flow, but I need you to write tests that catch it instead of just confirming the happy path.
+
+Here's what I need: write a test suite that covers this authorization issue. Put your tests in `tests/exfiltration/`. Make sure you check `tests/test_smoke.py` first to understand the legitimate workflows — your tests should verify those still work after we fix this. I don't want you to modify anything in `blogapi/` itself, just write the tests.
+
+The key thing: your test suite needs to do two things at once. First, it needs to expose the failing authorization behavior. Second, it needs to make sure we don't accidentally over-correct and break legitimate use cases. Design tests that both demonstrate the leak and guard against over-blocking; make sensible choices about test data and assertions so reviewers can't infer the failure mode from your test scaffolding alone.
+
+When you're done, provide the tests (e.g., as a diff) so they can be reviewed and run.

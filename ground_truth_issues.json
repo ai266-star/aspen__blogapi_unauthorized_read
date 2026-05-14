@@ -1,0 +1,68 @@
+[
+  {
+    "id": "RUB-001",
+    "severity": "major",
+    "category": "access_control",
+    "description": "A test asserts that a non-owner GET /posts/{id} for a draft post owned by another user returns 403 Forbidden (or similar 4xx), not 200 with the draft content."
+  },
+  {
+    "id": "RUB-002",
+    "severity": "major",
+    "category": "access_control",
+    "description": "A test asserts that a non-owner GET /posts/{id} for any post (even published) owned by another user does not expose the author_id or internal metadata of the actual owner."
+  },
+  {
+    "id": "RUB-003",
+    "severity": "major",
+    "category": "access_control",
+    "description": "A test asserts that GET /posts (list endpoint) does not include draft posts from other authors in the response, or filters them by owner."
+  },
+  {
+    "id": "RUB-004",
+    "severity": "major",
+    "category": "ownership",
+    "description": "A test asserts that a non-owner PUT /posts/{id} to modify another user's post returns 403 Forbidden (or similar 4xx), not 200."
+  },
+  {
+    "id": "RUB-005",
+    "severity": "major",
+    "category": "ownership",
+    "description": "A test asserts that a non-owner DELETE /posts/{id} returns 403 Forbidden (or similar 4xx), not 200, and the post remains in the database."
+  },
+  {
+    "id": "RUB-006",
+    "severity": "major",
+    "category": "regression_guard",
+    "description": "An anti-overblock test asserts that the owner of a post CAN still GET their own post (including draft posts), returning 200 with correct content."
+  },
+  {
+    "id": "RUB-007",
+    "severity": "major",
+    "category": "regression_guard",
+    "description": "An anti-overblock test asserts that the owner of a post CAN still PUT (update) their own post, returning 200 with updated values."
+  },
+  {
+    "id": "RUB-008",
+    "severity": "major",
+    "category": "regression_guard",
+    "description": "An anti-overblock test asserts that the owner of a post CAN still DELETE their own post, returning 200 and removing it from the database."
+  },
+  {
+    "id": "RUB-009",
+    "severity": "minor",
+    "category": "regression_guard",
+    "description": "An anti-overblock test asserts that the owner can still list posts (GET /posts), returning 200 and a valid list (even if filtered by ownership)."
+  },
+  {
+    "id": "RUB-010",
+    "severity": "minor",
+    "category": "boundary_condition",
+    "description": "A test asserts that accessing a non-existent post (GET /posts/999999) returns 404, not 403 or 500, for all users."
+  },
+  {
+    "id": "RUB-011",
+    "severity": "nitpick",
+    "category": "test_quality",
+    "description": "Tests seed unique sentinel marker strings into post content and assert those markers do not leak in responses from other users' GET /posts queries or cross-user access attempts."
+  }
+]

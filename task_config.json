@@ -1,0 +1,102 @@
+{
+  "instance_id": "aspen__blogapi_unauthorized_read_001",
+  "pipeline": "aspen",
+  "task_type": "test_authoring",
+  "repo": {
+    "source_url": "https://github.com/ai266-star/aspen__blogapi_unauthorized_read.git",
+    "base_commit": "ca2558356c8a3499365f5be4a47fc0ad5b43cbf7",
+    "image_name": "micro1ai/aspen-blogapi:idor-v1",
+    "image_digest": "sha256:b4ac9d79d943ebc2194bffc586b6db07fb0f71b508fdd45e65dc6fcf53f7b7e5",
+    "repo_dir": "/repo",
+    "language": "python"
+  },
+  "title": "Author tests for unauthorized read in blog API",
+  "track": "Realm Aspen",
+  "cwe": [
+    "CWE-639"
+  ],
+  "severity": "medium",
+  "behavioral_prompt": "prompt.txt",
+  "rubric_only": true,
+  "submission": {
+    "expected_diff_paths": [
+      "tests/exfiltration/"
+    ],
+    "presentation": "git_diff"
+  },
+  "ground_truth_issues": [
+    {
+      "id": "RUB-001",
+      "severity": "major",
+      "category": "access_control",
+      "description": "A test asserts that a non-owner GET /posts/{id} for a draft post owned by another user returns 403 Forbidden (or similar 4xx), not 200 with the draft content."
+    },
+    {
+      "id": "RUB-002",
+      "severity": "major",
+      "category": "access_control",
+      "description": "A test asserts that a non-owner GET /posts/{id} for any post (even published) owned by another user does not expose the author_id or internal metadata of the actual owner."
+    },
+    {
+      "id": "RUB-003",
+      "severity": "major",
+      "category": "access_control",
+      "description": "A test asserts that GET /posts (list endpoint) does not include draft posts from other authors in the response, or filters them by owner."
+    },
+    {
+      "id": "RUB-004",
+      "severity": "major",
+      "category": "ownership",
+      "description": "A test asserts that a non-owner PUT /posts/{id} to modify another user's post returns 403 Forbidden (or similar 4xx), not 200."
+    },
+    {
+      "id": "RUB-005",
+      "severity": "major",
+      "category": "ownership",
+      "description": "A test asserts that a non-owner DELETE /posts/{id} returns 403 Forbidden (or similar 4xx), not 200, and the post remains in the database."
+    },
+    {
+      "id": "RUB-006",
+      "severity": "major",
+      "category": "regression_guard",
+      "description": "An anti-overblock test asserts that the owner of a draft post CAN still GET that exact post, returning 200 and matching expected core fields (id, author_id, content/is_draft) for the owner context."
+    },
+    {
+      "id": "RUB-007",
+      "severity": "major",
+      "category": "regression_guard",
+      "description": "An anti-overblock test asserts that the owner of a post CAN still PUT (update) their own post, returning 200, and verifies the new values persist on a follow-up owner read/list check."
+    },
+    {
+      "id": "RUB-008",
+      "severity": "major",
+      "category": "regression_guard",
+      "description": "An anti-overblock test asserts that the owner of a post CAN still DELETE their own post, returning 200, and verifies the post is no longer retrievable/listed for that owner afterward."
+    },
+    {
+      "id": "RUB-009",
+      "severity": "minor",
+      "category": "regression_guard",
+      "description": "An anti-overblock test asserts that GET /posts remains usable for a legitimate user, returning 200 and a list that includes that user's posts while excluding known non-owned draft fixtures."
+    },
+    {
+      "id": "RUB-010",
+      "severity": "minor",
+      "category": "boundary_condition",
+      "description": "A test asserts that accessing a non-existent post (GET /posts/999999) returns 404, not 403 or 500, for all users."
+    },
+    {
+      "id": "RUB-011",
+      "severity": "nitpick",
+      "category": "test_quality",
+      "description": "Tests use unique sentinel markers and assert those markers do not appear in cross-user list/detail responses, while still being observable by the rightful owner in owner-context assertions."
+    }
+  ],
+  "rubric_max_score": 29,
+  "rubric_severity_weights": {
+    "critical": 4,
+    "major": 3,
+    "minor": 2,
+    "nitpick": 1
+  }
+}

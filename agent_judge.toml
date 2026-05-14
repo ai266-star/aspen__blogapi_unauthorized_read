@@ -1,0 +1,76 @@
+[judge]
+judge = "claude-code"
+
+timeout = 600
+isolated = false
+cwd = "/repo"
+prompt_template = "prompt.md"
+
+[[criterion]]
+name = "rub_001"
+description = "The agent's submitted diff satisfies this rubric item: A test asserts that a non-owner GET /posts/{id} for a draft post owned by another user returns 403 Forbidden (or similar 4xx), not 200 with the draft content. Category: access_control."
+type = "binary"
+weight = 3.0
+
+[[criterion]]
+name = "rub_002"
+description = "The agent's submitted diff satisfies this rubric item: A test asserts that a non-owner GET /posts/{id} for any post (even published) owned by another user does not expose the author_id or internal metadata of the actual owner. Category: access_control."
+type = "binary"
+weight = 3.0
+
+[[criterion]]
+name = "rub_003"
+description = "The agent's submitted diff satisfies this rubric item: A test asserts that GET /posts (list endpoint) does not include draft posts from other authors in the response, or filters them by owner. Category: access_control."
+type = "binary"
+weight = 3.0
+
+[[criterion]]
+name = "rub_004"
+description = "The agent's submitted diff satisfies this rubric item: A test asserts that a non-owner PUT /posts/{id} to modify another user's post returns 403 Forbidden (or similar 4xx), not 200. Category: ownership."
+type = "binary"
+weight = 3.0
+
+[[criterion]]
+name = "rub_005"
+description = "The agent's submitted diff satisfies this rubric item: A test asserts that a non-owner DELETE /posts/{id} returns 403 Forbidden (or similar 4xx), not 200, and the post remains in the database. Category: ownership."
+type = "binary"
+weight = 3.0
+
+[[criterion]]
+name = "rub_006"
+description = "The agent's submitted diff satisfies this rubric item: An anti-overblock test asserts that the owner of a post CAN still GET their own post (including draft posts), returning 200 with correct content. Category: regression_guard."
+type = "binary"
+weight = 3.0
+
+[[criterion]]
+name = "rub_007"
+description = "The agent's submitted diff satisfies this rubric item: An anti-overblock test asserts that the owner of a post CAN still PUT (update) their own post, returning 200 with updated values. Category: regression_guard."
+type = "binary"
+weight = 3.0
+
+[[criterion]]
+name = "rub_008"
+description = "The agent's submitted diff satisfies this rubric item: An anti-overblock test asserts that the owner of a post CAN still DELETE their own post, returning 200 and removing it from the database. Category: regression_guard."
+type = "binary"
+weight = 3.0
+
+[[criterion]]
+name = "rub_009"
+description = "The agent's submitted diff satisfies this rubric item: An anti-overblock test asserts that the owner can still list posts (GET /posts), returning 200 and a valid list (even if filtered by ownership). Category: regression_guard."
+type = "binary"
+weight = 2.0
+
+[[criterion]]
+name = "rub_010"
+description = "The agent's submitted diff satisfies this rubric item: A test asserts that accessing a non-existent post (GET /posts/999999) returns 404, not 403 or 500, for all users. Category: boundary_condition."
+type = "binary"
+weight = 2.0
+
+[[criterion]]
+name = "rub_011"
+description = "The agent's submitted diff satisfies this rubric item: Tests seed unique sentinel marker strings into post content and assert those markers do not leak in responses from other users' GET /posts queries or cross-user access attempts. Category: test_quality."
+type = "binary"
+weight = 1.0
+
+[scoring]
+aggregation = "weighted_mean"

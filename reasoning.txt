@@ -1,0 +1,30 @@
+# Task Design Reasoning
+
+## The Vulnerability
+
+There's an ownership bug in the blog API. Some request flows do not correctly enforce who is allowed to act on a resource. The core impact is that one user may observe or alter another user's content. The exact manifestation may vary across endpoints; tests should reveal that surface behavior without relying on brittle implementation details.
+
+## Why Test-Authoring Makes Sense Here
+
+We could ask someone to *fix* this bug, but there are many ways to fix it correctly (middleware auth checks, inline validation, decorators, database-level RLS, etc.). The implementations differ, but they all solve the same problem.
+
+The real test of understanding isn't "can you add an if statement" — it's "can you write tests that specify what the correct behavior should be?" That's why this is a test-authoring task. Your tests define the contract that any valid fix must satisfy.
+
+If tests only assert a narrow response code, a fix could be implemented that incidentally disables legitimate behavior. Good test suites pair negative checks (deny wrong-user flows) with positive checks (confirm intended user flows remain functional). That dual-contract is the discriminative property we want.
+
+## How the Rubric Breaks Down
+
+The rubric is structured to reward both coverage of the incorrect flows and protection against over-blocking. Items target read/update/delete flows as well as list behavior and relevant boundary cases. A small portion of the rubric rewards test-quality practices that make the claims robust rather than brittle.
+
+## Why This Distribution
+
+Frontier models (Claude Opus) should catch the direct coverage items reliably. They understand access control. The regression guards are where discrimination happens — good models write them, weaker ones often under-specify them. The sentinel-marker expectation is deliberately high-friction because it forces models to prove non-leakage rather than only checking status codes.
+
+## The Math
+
+- 8 major items × 3 points = 24 points
+- 2 minor items × 2 points = 4 points  
+- 1 nitpick item × 1 point = 1 point
+- **Total: 29 points max**
+
+If a model is consistently near the top of this rubric, it is likely capturing both exploit coverage and anti-overblock behavior. If it clusters in the middle, it is usually missing either persistence checks or non-leakage assertions.
