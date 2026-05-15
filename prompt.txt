@@ -22,4 +22,24 @@ Helpful hints (do not reveal implementation details)
 
 - Quick simulation hint: tests should set the HTTP header `X-User-Id` to simulate different users (for example `user1` vs `user2`). When creating draft posts use `is_draft: true` and assert the response fields `author_id` and `is_draft` to distinguish owner-visible content from cross-user responses.
 
+More explicit hints (test-authoring guidance):
+- Use the provided `client` fixture and set the header `X-User-Id` to simulate users. Common IDs available: `user1`, `user2`, `admin`.
+- Create two posts: one draft (`is_draft: true`) owned by `user1` and one published (`is_draft: false`) owned by `user1`. Include a unique sentinel string in the `content` (e.g., `SENTINEL-<random>`).
+- Negative checks (detect the bug):
+	- Non-owner detail read: call `GET /posts/{id}` as `user2` for the draft post and assert `response.status_code == 403` (or, as a secondary check, that the sentinel and `author_id` are NOT present in the JSON body).
+	- Non-owner list read: call `GET /posts` as `user2` and assert the draft's sentinel does not appear in any returned post, and that drafts owned by others are excluded.
+	- Non-owner modify/delete: attempt `PUT /posts/{id}` and `DELETE /posts/{id}` as `user2` and assert `response.status_code == 403` and that the original post is unchanged and still retrievable by the owner afterwards.
+- Positive (regression-guard) checks:
+	- Owner detail read: call `GET /posts/{id}` as `user1` and assert `response.status_code == 200` and that the sentinel, `author_id == 'user1'`, and `is_draft == true` are present.
+	- Owner update: `PUT /posts/{id}` as `user1` with new content, then `GET /posts/{id}` as `user1` and assert updated content persists.
+	- Owner delete: `DELETE /posts/{id}` as `user1` then `GET /posts/{id}` and assert `response.status_code == 404`.
+- Boundary checks:
+	- Non-existent ID: `GET /posts/999999` as any user and assert `response.status_code == 404`.
+- Test-quality notes:
+	- Use short-lived sentinel strings and assert they are visible only to the owner context and absent in cross-user responses.
+	- Prefer exact status-code assertions (`== 200`, `== 403`, `== 404`) and exact field checks (compare `author_id`, `is_draft`, `content`).
+	- After non-owner attempts to change or delete, always follow up with an owner-context `GET` to verify persistence/absence.
+
+These hints are meant to guide test structure and assertions; do not modify application code.
+
 Deliver only tests and supporting test helpers in `tests/exfiltration/`; do not alter application code or test harness files.
