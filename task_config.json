@@ -5,7 +5,7 @@
   "repo": {
     "source_url": "https://github.com/ai266-star/aspen__blogapi_unauthorized_read.git",
     "base_commit": "ca2558356c8a3499365f5be4a47fc0ad5b43cbf7",
-    "image_name": "ai266/aspen-blogapi:idor-v1",
+    "image_name": "micro1ai/aspen-blogapi:idor-v1",
     "image_digest": "sha256:b4ac9d79d943ebc2194bffc586b6db07fb0f71b508fdd45e65dc6fcf53f7b7e5",
     "repo_dir": "/repo",
     "language": "python"
