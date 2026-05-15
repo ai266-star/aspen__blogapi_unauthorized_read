@@ -42,4 +42,46 @@ More explicit hints (test-authoring guidance):
 
 These hints are meant to guide test structure and assertions; do not modify application code.
 
+Criterion-mapped guidance (explicit steps to satisfy each rubric item)
+- RUB-001 (non-owner detail read - draft):
+	- Create a draft post as `user1` with a sentinel string in `content`.
+	- As `user2`, call `GET /posts/{id}` and assert `response.status_code == 403`.
+	- Also assert the response body does NOT contain the sentinel or `author_id == 'user1'`.
+- RUB-002 (non-owner detail read - no owner metadata leak):
+	- Create a post (published or draft) as `user1` containing `author_id`-correlating content.
+	- As `user2`, call `GET /posts/{id}` and assert the returned JSON does not include `author_id` or any internal metadata for the real owner (explicitly assert `resp.json().get('author_id') != 'user1'` or that `author_id` is absent).
+- RUB-003 (list does not include others' drafts):
+	- Create a draft as `user1` with a unique sentinel.
+	- As `user2`, call `GET /posts` and assert the sentinel is not present anywhere in the returned list and that no draft with `author_id == 'user1'` appears.
+- RUB-004 (non-owner modify blocked):
+	- Create a post as `user1`.
+	- As `user2`, attempt `PUT /posts/{id}` with changed content and assert `response.status_code == 403` (and not 200). Follow up with `GET /posts/{id}` as `user1` to assert the original content remains.
+- RUB-005 (non-owner delete blocked):
+	- Create a post as `user1`.
+	- As `user2`, attempt `DELETE /posts/{id}` and assert `response.status_code == 403`. Then `GET /posts/{id}` as `user1` should still return `200`.
+- RUB-006 (owner can read their draft):
+	- Create a draft as `user1` with sentinel.
+	- As `user1`, `GET /posts/{id}` and assert `response.status_code == 200` and that `content` contains the sentinel, `author_id == 'user1'`, and `is_draft == True`.
+- RUB-007 (owner can update their post):
+	- Create a post as `user1`.
+	- As `user1`, `PUT /posts/{id}` with new content, assert `response.status_code == 200`, then `GET /posts/{id}` and assert content persisted.
+- RUB-008 (owner can delete their post):
+	- Create a post as `user1`.
+	- As `user1`, `DELETE /posts/{id}` assert `response.status_code == 200`, then `GET /posts/{id}` assert `response.status_code == 404`.
+- RUB-009 (list usable for legit user):
+	- Create multiple posts for `user1` and `user2` (include at least one draft for each).
+	- As `user1`, `GET /posts` and assert the returned list includes `user1`'s posts (by id or sentinel) and does not include known non-owned draft sentinels.
+- RUB-010 (non-existent ID behavior):
+	- `GET /posts/999999` as `user1` and `user2` and assert `response.status_code == 404`.
+- RUB-011 (sentinel test-quality):
+	- Always use a short, unique sentinel (e.g., `SENTINEL-<random>`). Assert the sentinel is visible to the owner in both detail and list responses when appropriate, and assert it is NOT visible to other users in their detail/list responses.
+
+Practical test skeleton (pseudocode) you can follow in `tests/exfiltration/test_access_control.py`:
+
+	- Use the existing `client` fixture.
+	- Helper: `def create_post_as(user, payload): return client.post('/posts', headers={'X-User-Id': user}, json=payload)`
+	- Follow the create → cross-user-check → owner-check pattern for each rubric item.
+
+Scoring tip: prefer strict equality assertions for status codes and exact JSON field checks rather than fuzzy or substring checks. The judge looks for concrete, deterministic assertions mapping to the rubric items above.
+
 Deliver only tests and supporting test helpers in `tests/exfiltration/`; do not alter application code or test harness files.
