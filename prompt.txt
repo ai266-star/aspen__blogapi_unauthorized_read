@@ -20,4 +20,6 @@ Helpful hints (do not reveal implementation details)
 - Create fixtures in your test that perform: create-post (owner), cross-user access attempt, follow-up owner-read to verify persistence, and list-checks to confirm filtering behavior.
 - Check boundary behavior (non-existent IDs should return `404`) and verify metadata fields are not leaked to non-owners.
 
+- Quick simulation hint: tests should set the HTTP header `X-User-Id` to simulate different users (for example `user1` vs `user2`). When creating draft posts use `is_draft: true` and assert the response fields `author_id` and `is_draft` to distinguish owner-visible content from cross-user responses.
+
 Deliver only tests and supporting test helpers in `tests/exfiltration/`; do not alter application code or test harness files.
