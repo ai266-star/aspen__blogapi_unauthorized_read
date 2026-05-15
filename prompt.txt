@@ -1,7 +1,23 @@
-Hey! We've got an issue with the blog API. One of the permission boundaries is off, and the current behavior lets a normal user get farther than they should. We know there is an authorization inconsistency somewhere in the request flow, but I need you to write tests that catch it instead of just confirming the happy path.
+Task: Author tests that detect unauthorized-read (IDOR) behavior in the Blog API.
 
-Here's what I need: write a test suite that covers this authorization issue. Put your tests in `tests/exfiltration/`. Make sure you check `tests/test_smoke.py` first to understand the legitimate workflows — your tests should verify those still work after we fix this. I don't want you to modify anything in `blogapi/` itself, just write the tests.
+Goal
+- Write pytest tests that would catch a missing ownership check allowing one user to read another user's draft/post content.
 
-The key thing: your test suite needs to do two things at once. First, it needs to expose the failing authorization behavior. Second, it needs to make sure we don't accidentally over-correct and break legitimate use cases. Design tests that both demonstrate the leak and guard against over-blocking; make sensible choices about test data and assertions so reviewers can't infer the failure mode from your test scaffolding alone.
+Constraints
+- Do NOT modify any code under `blogapi/` — only add tests.
+- Place all new tests under `tests/exfiltration/` and submit them as a unified git diff (the judge inspects diffs as text).
+- Use the test fixtures and `client` provided by `tests/conftest.py` and review `tests/test_smoke.py` to understand legitimate flows.
 
-When you're done, provide the tests (e.g., as a diff) so they can be reviewed and run.
+Evaluation expectations
+- Your tests should demonstrate the vulnerability (negative checks) and include regression-guard checks (positive checks) so fixes that over-block legitimate behavior are caught.
+- Include at least one sentinel marker test (unique string placed in a post) and assert that the marker is observable by the owner but not visible to other users.
+- Prefer explicit assertions (exact status codes and field checks) over vague or permissive assertions.
+
+Submission
+- The judge expects a git diff that adds tests (e.g., `tests/exfiltration/test_access_control.py`). Write tests that are runnable under `pytest` against the provided image, but the judge will only read the diff to grade them.
+
+Helpful hints (do not reveal implementation details)
+- Create fixtures in your test that perform: create-post (owner), cross-user access attempt, follow-up owner-read to verify persistence, and list-checks to confirm filtering behavior.
+- Check boundary behavior (non-existent IDs should return `404`) and verify metadata fields are not leaked to non-owners.
+
+Deliver only tests and supporting test helpers in `tests/exfiltration/`; do not alter application code or test harness files.

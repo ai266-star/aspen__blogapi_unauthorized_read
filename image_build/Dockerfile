@@ -31,3 +31,7 @@ USER user
 ENV PYTHONPATH=/repo
 
 CMD ["bash"]
+
+# Metadata
+LABEL org.opencontainers.image.source="https://github.com/ai266-star/aspen__blogapi_unauthorized_read"
+LABEL org.opencontainers.image.version="idor-v1"
