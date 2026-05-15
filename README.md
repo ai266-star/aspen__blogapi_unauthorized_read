@@ -24,7 +24,7 @@ Image metadata
 
 | Field | Value |
 |---|---|
-| Image tag | `ai266/aspen-blogapi:idor-v1` |
+| Image tag | `micro1ai/aspen-blogapi:idor-v1` |
 | Digest | `sha256:b4ac9d79d943ebc2194bffc586b6db07fb0f71b508fdd45e65dc6fcf53f7b7e5` |
 | Platform | `linux/amd64` |
 
