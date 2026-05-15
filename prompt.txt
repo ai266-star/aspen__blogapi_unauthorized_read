@@ -43,13 +43,18 @@ More explicit hints (test-authoring guidance):
 These hints are meant to guide test structure and assertions; do not modify application code.
 
 Criterion-mapped guidance (explicit steps to satisfy each rubric item)
+- Important correction for the published-post case:
+	- Do NOT write a cross-user published-post test that expects `200` and the full body.
+	- For RUB-002, the non-owner direct `GET /posts/{id}` check must be about preventing exposure of the real owner's `author_id` and internal metadata.
+	- Keep the published-post cross-user case separate from list visibility; RUB-002 is about direct detail access, not the public list endpoint.
 - RUB-001 (non-owner detail read - draft):
 	- Create a draft post as `user1` with a sentinel string in `content`.
 	- As `user2`, call `GET /posts/{id}` and assert `response.status_code == 403`.
 	- Also assert the response body does NOT contain the sentinel or `author_id == 'user1'`.
 - RUB-002 (non-owner detail read - no owner metadata leak):
-	- Create a post (published or draft) as `user1` containing `author_id`-correlating content.
-	- As `user2`, call `GET /posts/{id}` and assert the returned JSON does not include `author_id` or any internal metadata for the real owner (explicitly assert `resp.json().get('author_id') != 'user1'` or that `author_id` is absent).
+	- Create a published post as `user1` with a sentinel and confirm the owner sees `author_id == 'user1'` in the owner response.
+	- As `user2`, call `GET /posts/{id}` and assert the real owner's `author_id` is not revealed in the cross-user response.
+	- Stronger version: assert `response.status_code == 403` for the non-owner detail request, or if the API returns `200`, assert the JSON body is redacted and does not expose `author_id`, `created_at`, or the sentinel content.
 - RUB-003 (list does not include others' drafts):
 	- Create a draft as `user1` with a unique sentinel.
 	- As `user2`, call `GET /posts` and assert the sentinel is not present anywhere in the returned list and that no draft with `author_id == 'user1'` appears.
@@ -81,6 +86,7 @@ Practical test skeleton (pseudocode) you can follow in `tests/exfiltration/test_
 	- Use the existing `client` fixture.
 	- Helper: `def create_post_as(user, payload): return client.post('/posts', headers={'X-User-Id': user}, json=payload)`
 	- Follow the create → cross-user-check → owner-check pattern for each rubric item.
+	- Add separate tests for: non-owner GET on a published post, non-owner PUT, non-owner DELETE, owner PUT persistence, and owner DELETE persistence.
 
 Scoring tip: prefer strict equality assertions for status codes and exact JSON field checks rather than fuzzy or substring checks. The judge looks for concrete, deterministic assertions mapping to the rubric items above.
 
