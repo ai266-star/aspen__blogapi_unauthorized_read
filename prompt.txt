@@ -55,29 +55,36 @@ Criterion-mapped guidance (explicit steps to satisfy each rubric item)
 	- Create a published post as `user1` with a sentinel and confirm the owner sees `author_id == 'user1'` in the owner response.
 	- As `user2`, call `GET /posts/{id}` and assert the real owner's `author_id` is not revealed in the cross-user response.
 	- Stronger version: assert `response.status_code == 403` for the non-owner detail request, or if the API returns `200`, assert the JSON body is redacted and does not expose `author_id`, `created_at`, or the sentinel content.
+	- Do not reuse a list-visibility test here; this must be a direct detail GET on someone else's published post.
 - RUB-003 (list does not include others' drafts):
 	- Create a draft as `user1` with a unique sentinel.
 	- As `user2`, call `GET /posts` and assert the sentinel is not present anywhere in the returned list and that no draft with `author_id == 'user1'` appears.
 - RUB-004 (non-owner modify blocked):
 	- Create a post as `user1`.
 	- As `user2`, attempt `PUT /posts/{id}` with changed content and assert `response.status_code == 403` (and not 200). Follow up with `GET /posts/{id}` as `user1` to assert the original content remains.
+	- This needs to be a separate test from read/list coverage; the judge only counts a direct cross-user update attempt.
 - RUB-005 (non-owner delete blocked):
 	- Create a post as `user1`.
 	- As `user2`, attempt `DELETE /posts/{id}` and assert `response.status_code == 403`. Then `GET /posts/{id}` as `user1` should still return `200`.
+	- Include a follow-up owner read so the test proves the post remained in the database after the forbidden delete.
 - RUB-006 (owner can read their draft):
 	- Create a draft as `user1` with sentinel.
 	- As `user1`, `GET /posts/{id}` and assert `response.status_code == 200` and that `content` contains the sentinel, `author_id == 'user1'`, and `is_draft == True`.
 - RUB-007 (owner can update their post):
 	- Create a post as `user1`.
 	- As `user1`, `PUT /posts/{id}` with new content, assert `response.status_code == 200`, then `GET /posts/{id}` and assert content persisted.
+	- The follow-up read/list assertion must confirm the updated values, not just the 200 status.
 - RUB-008 (owner can delete their post):
 	- Create a post as `user1`.
 	- As `user1`, `DELETE /posts/{id}` assert `response.status_code == 200`, then `GET /posts/{id}` assert `response.status_code == 404`.
+	- Also verify the deleted post is not returned in `GET /posts` for the owner.
+	- Treat this as a separate anti-overblock test; do not merge it into a generic delete helper.
 - RUB-009 (list usable for legit user):
 	- Create multiple posts for `user1` and `user2` (include at least one draft for each).
 	- As `user1`, `GET /posts` and assert the returned list includes `user1`'s posts (by id or sentinel) and does not include known non-owned draft sentinels.
 - RUB-010 (non-existent ID behavior):
 	- `GET /posts/999999` as `user1` and `user2` and assert `response.status_code == 404`.
+	- Use the exact ID `999999` so the boundary condition is unmistakable.
 - RUB-011 (sentinel test-quality):
 	- Always use a short, unique sentinel (e.g., `SENTINEL-<random>`). Assert the sentinel is visible to the owner in both detail and list responses when appropriate, and assert it is NOT visible to other users in their detail/list responses.
 
@@ -87,6 +94,7 @@ Practical test skeleton (pseudocode) you can follow in `tests/exfiltration/test_
 	- Helper: `def create_post_as(user, payload): return client.post('/posts', headers={'X-User-Id': user}, json=payload)`
 	- Follow the create → cross-user-check → owner-check pattern for each rubric item.
 	- Add separate tests for: non-owner GET on a published post, non-owner PUT, non-owner DELETE, owner PUT persistence, and owner DELETE persistence.
+		- If you already have a draft/published visibility test, keep it, but do not let it stand in for the missing direct update/delete tests.
 
 Scoring tip: prefer strict equality assertions for status codes and exact JSON field checks rather than fuzzy or substring checks. The judge looks for concrete, deterministic assertions mapping to the rubric items above.
 

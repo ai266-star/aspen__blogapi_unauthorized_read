@@ -152,3 +152,9 @@ def test_owner_can_delete_own_post_and_remove_it_from_owner_view(client):
     owner_list = client.get("/posts", headers={"X-User-Id": "user1"})
     assert owner_list.status_code == 200
     assert all(post["id"] != post_id for post in owner_list.json())
+
+
+def test_nonexistent_post_returns_404_for_all_users(client):
+    for user_id in ("user1", "user2"):
+        response = get_post(client, user_id, 999999)
+        assert response.status_code == 404
