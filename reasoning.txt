@@ -8,6 +8,16 @@ Scoring rationale
 - Reward negative checks (expose unauthorized reads/updates/deletes) and positive checks (owners retain expected capabilities).
 - Include boundary checks (404 vs 403) and sentinel-marker checks to ensure data isn't leaked.
 
+ADDITIONAL EXPLANATION FOR AUTHORS (MAKE TASK HARDER)
+
+- WHY stricter tests: earlier runs passed 6/11 because some tests allowed lenient behavior (e.g., `200` with redaction). To *increase difficulty* and reduce LLM pass rates, require stricter outcomes (prefer `403` for non-owner detail requests including published posts) and insist on exact boundary values (ID `999999` returns `404`).
+- MAPPING: annotate each test with the exact RUB ID(s) it covers using a single-line comment above the test function (example: `# RUB-004`). This helps graders and aligns model output to rubric items.
+- EXAMPLE: For RUB-002 (no owner metadata leak), the test must assert either a `403` or, if the API returns `200`, assert that `author_id`, `created_at`, and the sentinel are NOT present in the response JSON. However, prefer the strict `403` path in grading.
+- GIT DIFF TIP: The judge reads diffs as text: avoid adding unrelated whitespace or metadata. Keep tests minimal and focused so the diff contains only the assertions and helper functions.
+- SANITY: Always include a create → cross-user probe → owner follow-up pattern. This proves the vulnerability and guards against over-blocking fixes.
+
+If you want me to add a short README snippet for graders explaining how the new stricter tests map to rubric items, I can append it to `README.md` as well. Reply: "Add grader README".
+
 Rubric math
 - 8 major items × 3 = 24
 - 2 minor items × 2 = 4
