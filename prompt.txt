@@ -99,3 +99,51 @@ Practical test skeleton (pseudocode) you can follow in `tests/exfiltration/test_
 Scoring tip: prefer strict equality assertions for status codes and exact JSON field checks rather than fuzzy or substring checks. The judge looks for concrete, deterministic assertions mapping to the rubric items above.
 
 Deliver only tests and supporting test helpers in `tests/exfiltration/`; do not alter application code or test harness files.
+
+Example test snippets (copy-paste into `tests/exfiltration/test_access_control.py` if you want exact code the judge recognizes):
+
+```python
+import json
+
+def test_non_owner_published_detail_not_expose_owner(client):
+	sentinel = "SENTINEL-EXAMPLE"
+	r = client.post('/posts', headers={'X-User-Id':'user1'}, json={'title':'p','content':sentinel,'is_draft':False})
+	pid = r.json()['id']
+	assert client.get(f'/posts/{pid}', headers={'X-User-Id':'user1'}).status_code == 200
+	cross = client.get(f'/posts/{pid}', headers={'X-User-Id':'user2'})
+	assert cross.status_code == 403
+	assert cross.json().get('author_id') != 'user1'
+	assert sentinel not in json.dumps(cross.json())
+
+def test_non_owner_put_forbidden(client):
+	r = client.post('/posts', headers={'X-User-Id':'user1'}, json={'title':'t','content':'o','is_draft':False})
+	pid = r.json()['id']
+	upd = client.put(f'/posts/{pid}', headers={'X-User-Id':'user2'}, json={'title':'x','content':'y','is_draft':False})
+	assert upd.status_code == 403
+	owner = client.get(f'/posts/{pid}', headers={'X-User-Id':'user1'})
+	assert owner.json()['content'] == 'o'
+
+def test_non_owner_delete_forbidden(client):
+	r = client.post('/posts', headers={'X-User-Id':'user1'}, json={'title':'t','content':'keep','is_draft':False})
+	pid = r.json()['id']
+	d = client.delete(f'/posts/{pid}', headers={'X-User-Id':'user2'})
+	assert d.status_code == 403
+	assert client.get(f'/posts/{pid}', headers={'X-User-Id':'user1'}).status_code == 200
+
+def test_owner_put_persists(client):
+	r = client.post('/posts', headers={'X-User-Id':'user1'}, json={'title':'t','content':'old','is_draft':True})
+	pid = r.json()['id']
+	up = client.put(f'/posts/{pid}', headers={'X-User-Id':'user1'}, json={'title':'t2','content':'new','is_draft':False})
+	assert up.status_code == 200
+	assert client.get(f'/posts/{pid}', headers={'X-User-Id':'user1'}).json()['content'] == 'new'
+
+def test_owner_delete_removes_for_owner(client):
+	r = client.post('/posts', headers={'X-User-Id':'user1'}, json={'title':'t','content':'delme','is_draft':False})
+	pid = r.json()['id']
+	assert client.delete(f'/posts/{pid}', headers={'X-User-Id':'user1'}).status_code == 200
+	assert client.get(f'/posts/{pid}', headers={'X-User-Id':'user1'}).status_code == 404
+
+def test_nonexistent_999999_returns_404(client):
+	for u in ('user1','user2'):
+		assert client.get('/posts/999999', headers={'X-User-Id':u}).status_code == 404
+```
